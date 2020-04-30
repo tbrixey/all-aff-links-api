@@ -7,13 +7,19 @@ const MongoClient = require("mongodb").MongoClient;
 const assert = require("assert");
 
 const url = process.env.MONGO_URL;
-const dbName = process.env.DB_NAME;
 
 MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
   assert.equal(null, err);
   console.log("Connected successfully to server");
 
   client.close();
+});
+
+app.use((req, res, next) => {
+  res.append("Access-Control-Allow-Origin", ["*"]);
+  res.append("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+  res.append("Access-Control-Allow-Headers", "Content-Type");
+  next();
 });
 
 app.get("/", function (req, res) {
