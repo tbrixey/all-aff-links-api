@@ -2,18 +2,8 @@ var express = require("express");
 var port = process.env.PORT || 3000;
 var app = express();
 require("dotenv").config();
-
-const MongoClient = require("mongodb").MongoClient;
+const { client, dbName } = require("./mongo");
 const assert = require("assert");
-
-const url = process.env.MONGO_URL;
-
-MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
-  assert.equal(null, err);
-  console.log("Connected successfully to server");
-
-  client.close();
-});
 
 app.use((req, res, next) => {
   res.append("Access-Control-Allow-Origin", ["*"]);
@@ -27,8 +17,17 @@ app.get("/", function (req, res) {
 });
 
 app.get("/sites", (req, res) => {
-  console.log("SITES", req.query);
-  res.send({ data: "yo" });
+  client.connect((err) => {
+    const db = client.db(dbName);
+    const collection = db.collection("sites");
+    collection
+      .find({ name: { $regex: `.*${req.query.searchStr}.*` } })
+      .toArray((err, result) => {
+        assert.equal(err, null);
+
+        res.json(result);
+      });
+  });
 });
 
 app.listen(port, function () {
