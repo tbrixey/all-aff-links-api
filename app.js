@@ -21,7 +21,12 @@ app.get("/sites", (req, res) => {
     const db = client.db(dbName);
     const collection = db.collection("sites");
     collection
-      .find({ name: { $regex: `.*${req.query.searchStr}.*` } })
+      .find({
+        $or: [
+          { name: { $regex: `.*${req.query.searchStr}.*` } },
+          { url: { $regex: `.*${req.query.searchStr}.*` } },
+        ],
+      })
       .toArray((err, result) => {
         assert.equal(err, null);
 
