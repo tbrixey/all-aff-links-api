@@ -32,8 +32,12 @@ app.get("/sites", (req, res) => {
       })
       .toArray((err, result) => {
         assert.equal(err, null);
-        console.log("RESULT", result);
         const randomMonth = result[Math.floor(Math.random() * result.length)];
+        collection.findOneAndUpdate(
+          { _id: randomMonth._id },
+          { $inc: { pulled: 1 } },
+          { upsert: false }
+        );
         res.json(randomMonth);
       });
   });
