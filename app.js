@@ -1,9 +1,12 @@
-var express = require("express");
-var port = process.env.PORT || 3000;
-var app = express();
+const express = require("express");
+const port = process.env.PORT || 3000;
+const app = express();
+const bodyParser = require("body-parser");
 require("dotenv").config();
 const { client, dbName } = require("./mongo");
 const assert = require("assert");
+
+app.use(bodyParser.json());
 
 app.use((req, res, next) => {
   res.append("Access-Control-Allow-Origin", ["*"]);
@@ -29,8 +32,24 @@ app.get("/sites", (req, res) => {
       })
       .toArray((err, result) => {
         assert.equal(err, null);
+        console.log("RESULT", result);
+        const randomMonth = result[Math.floor(Math.random() * result.length)];
+        res.json(randomMonth);
+      });
+  });
+});
 
-        res.json(result);
+app.post("/sites", (req, res) => {
+  client.connect((err) => {
+    const db = client.db(dbName);
+    const collection = db.collection("sites");
+    collection
+      .insertOne({
+        name: req.body.name,
+        url: req.body.url,
+      })
+      .then((doc) => {
+        res.send("OK");
       });
   });
 });
