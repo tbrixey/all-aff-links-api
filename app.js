@@ -26,18 +26,22 @@ app.get("/sites", (req, res) => {
     collection
       .find({
         $or: [
-          { name: { $regex: `.*${req.query.searchStr}.*` } },
-          { url: { $regex: `.*${req.query.searchStr}.*` } },
+          { name: { $regex: `.*${req.query.searchStr}.*`, $options: `i` } },
+          { url: { $regex: `.*${req.query.searchStr}.*`, $options: `i` } },
         ],
       })
       .toArray((err, result) => {
         assert.equal(err, null);
-        const randomMonth = result[Math.floor(Math.random() * result.length)];
-        collection.findOneAndUpdate(
-          { _id: randomMonth._id },
-          { $inc: { pulled: 1 } },
-          { upsert: false }
-        );
+        var randomMonth = "not found";
+        if (result.length > 0) {
+          randomMonth = result[Math.floor(Math.random() * result.length)];
+          collection.findOneAndUpdate(
+            { _id: randomMonth._id },
+            { $inc: { pulled: 1 } },
+            { upsert: false }
+          );
+        }
+
         res.json(randomMonth);
       });
   });
