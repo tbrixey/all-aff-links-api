@@ -6,6 +6,8 @@ require("dotenv").config();
 const { client, dbName } = require("./mongo");
 const assert = require("assert");
 
+var ObjectId = require("mongodb").ObjectID;
+
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
@@ -29,6 +31,7 @@ app.get("/sites", (req, res) => {
           { name: { $regex: `.*${req.query.searchStr}.*`, $options: `i` } },
           { url: { $regex: `.*${req.query.searchStr}.*`, $options: `i` } },
         ],
+        $and: [{ expired: false }],
       })
       .toArray((err, result) => {
         assert.equal(err, null);
@@ -55,7 +58,26 @@ app.post("/sites", (req, res) => {
       .insertOne({
         name: req.body.name,
         url: req.body.url,
+        expired: false,
       })
+      .then((doc) => {
+        res.send("OK");
+      });
+  });
+});
+
+app.post("/siteexpired", (req, res) => {
+  client.connect((err) => {
+    const db = client.db(dbName);
+    const collection = db.collection("sites");
+    collection
+      .findOneAndUpdate(
+        {
+          _id: ObjectId(req.body.site._id),
+        },
+        { $set: { expired: true } },
+        { upsert: false }
+      )
       .then((doc) => {
         res.send("OK");
       });
